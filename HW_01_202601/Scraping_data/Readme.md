@@ -4,8 +4,8 @@ Este proyecto extrae automaticamente los resultados del examen de admision de la
 
 ## Estructura
 
-- `scraper.py`: script principal.
-- `output/resultados_sanmarcos.xlsx`: salida consolidada.
+- `scraper_task_1/scraper.py`: script principal.
+- `scraper_task_1/output_task_1/resultados_sanmarcos.xlsx`: salida consolidada.
 - `video/link.txt`: link del video explicativo.
 
 ## Requisitos
@@ -25,7 +25,7 @@ pip install selenium pandas openpyxl beautifulsoup4 webdriver-manager
 
 ```powershell
 conda activate ds_2026
-cd C:\Users\johnb\Documents\Github\Tasks_Data_Science_2026_I\HW_01_202601\Scraping_data
+cd C:\Users\johnb\Documents\Github\Tasks_Data_Science_2026_I\HW_01_202601\Scraping_data\scraper_task_1
 python scraper.py
 ```
 
@@ -49,7 +49,7 @@ Asi se extraen **todos los postulantes** y no solo los primeros 50.
 
 Se genera:
 
-- `output/resultados_sanmarcos.xlsx`
+- `scraper_task_1/output_task_1/resultados_sanmarcos.xlsx`
 
 Columnas principales:
 

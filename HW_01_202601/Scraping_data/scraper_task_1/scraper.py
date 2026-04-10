@@ -141,7 +141,7 @@ def run_scraper(output_path: Path) -> None:
                 "Puntaje" in df.columns
                 and df["Puntaje"].str.strip().ne("").any()
             )
-            print(f"    [OK] {len(df)} registros | Puntaje={'âœ“' if tiene_puntaje else 'âœ—'}")
+            print(f"    [OK] {len(df)} registros | Puntaje={'xx' if tiene_puntaje else 'yy'}")
             all_frames.append(df)
             time.sleep(0.3)
         except Exception as exc:
@@ -149,7 +149,7 @@ def run_scraper(output_path: Path) -> None:
             errors.append({"url": link, "error": str(exc)})
 
     if not all_frames:
-        raise RuntimeError("No se extrajo informaciÃ³n de ninguna carrera.")
+        raise RuntimeError("No se extrajo informacion de ninguna carrera.")
 
     final_df = pd.concat(all_frames, ignore_index=True)
     final_df.to_excel(output_path, index=False, engine="openpyxl")

@@ -298,7 +298,9 @@ def build_q3_q4_combined_comparison(
             "total_populated_centers",
             "matched_centers",
             "coverage_share",
+            "mean_distance_km",
             "median_distance_km",
+            "share_over_20km",
             "coverage_component",
             "distance_component",
             "q2_settlement_access_score",
@@ -328,7 +330,9 @@ def build_q3_q4_combined_comparison(
         "total_populated_centers",
         "matched_centers",
         "coverage_share",
+        "mean_distance_km",
         "median_distance_km",
+        "share_over_20km",
         "q1_territorial_availability_score",
         "coverage_component",
         "distance_component",
@@ -337,14 +341,38 @@ def build_q3_q4_combined_comparison(
     for col in score_cols:
         merged[col] = merged[col].fillna(0.0)
 
+    # Baseline: equal split Q1/Q2, Q2 uses median distance + coverage.
     merged["q3_baseline_combined_score"] = (
         0.50 * merged["q1_territorial_availability_score"]
         + 0.50 * merged["q2_settlement_access_score"]
     )
+
+    # Alternative: conceptually different on three axes:
+    #   (1) equal thirds across facility / activity / spatial access  (vs 25/25/50),
+    #   (2) mean distance instead of median  (more sensitive to extreme outliers),
+    #   (3) explicit 20km threshold penalty  (new component, not in baseline).
+    no_match_mask = merged["matched_centers"].eq(0)
+    max_mean_dist = merged.loc[~no_match_mask, "mean_distance_km"].max()
+    if pd.isna(max_mean_dist) or max_mean_dist <= 0:
+        max_mean_dist = 1.0
+    alt_mean_dist = merged["mean_distance_km"].copy()
+    alt_mean_dist.loc[no_match_mask] = max_mean_dist * 1.1
+
+    alt_distance_comp = 1 - minmax_scale(np.log1p(alt_mean_dist))
+    # No-match districts have share_over_20km=0 (fillna), but lack of data ≠ good access.
+    # Treat them as worst-case (share=1.0) consistent with the distance penalty above.
+    alt_share = merged["share_over_20km"].copy()
+    alt_share.loc[no_match_mask] = 1.0
+    alt_threshold_comp = 1 - alt_share
+    merged["q4_alt_q2_score"] = (
+        0.45 * alt_distance_comp
+        + 0.30 * merged["coverage_component"]
+        + 0.25 * alt_threshold_comp
+    )
     merged["q4_alternative_combined_score"] = (
-        0.30 * merged["facility_component"]
-        + 0.20 * merged["activity_component"]
-        + 0.50 * merged["q2_settlement_access_score"]
+        (1 / 3) * merged["facility_component"]
+        + (1 / 3) * merged["activity_component"]
+        + (1 / 3) * merged["q4_alt_q2_score"]
     )
 
     merged["baseline_rank_best_to_worst"] = (
@@ -416,9 +444,12 @@ def build_q3_q4_combined_comparison(
         "total_populated_centers",
         "matched_centers",
         "coverage_share",
+        "mean_distance_km",
         "median_distance_km",
+        "share_over_20km",
         "q1_territorial_availability_score",
         "q2_settlement_access_score",
+        "q4_alt_q2_score",
         "q3_baseline_combined_score",
         "q4_alternative_combined_score",
         "baseline_rank_best_to_worst",

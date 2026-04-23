@@ -4,10 +4,16 @@ from pathlib import Path
 
 import pandas as pd
 
+from .geospatial import load_districts
 from .metrics import build_q3_q4_combined_comparison
 from .question1_pipeline import run_question1_pipeline
 from .question2_pipeline import run_question2_pipeline
-from .visualization import plot_q3_top_bottom_combined, plot_q4_rank_shift_distribution
+from .visualization import (
+    plot_choropleth_q3_comparison,
+    plot_q3_top_bottom_combined,
+    plot_q4_rank_shift_distribution,
+    plot_q4_sensitivity_scatter,
+)
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -46,6 +52,10 @@ def run_question3_4_pipeline() -> None:
 
     plot_q3_top_bottom_combined(q34, FIGURES_DIR / "q3_top_bottom_combined.png")
     plot_q4_rank_shift_distribution(q34, FIGURES_DIR / "q4_rank_shift_distribution.png")
+    plot_q4_sensitivity_scatter(q34, FIGURES_DIR / "q4_sensitivity_scatter.png")
+
+    districts = load_districts()
+    plot_choropleth_q3_comparison(districts, q34, FIGURES_DIR / "q3_q4_choropleth_comparison.png")
 
     summary = [
         "# Question 3 and Question 4 Summary",

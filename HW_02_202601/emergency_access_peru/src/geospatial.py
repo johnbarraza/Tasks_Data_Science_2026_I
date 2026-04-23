@@ -100,3 +100,22 @@ def assign_points_to_districts(
     ).drop(columns=["index_right"], errors="ignore")
     return assigned
 
+
+def compute_nearest_distances(
+    centers: gpd.GeoDataFrame,
+    facilities: gpd.GeoDataFrame,
+    distance_col: str = "distance_m",
+) -> gpd.GeoDataFrame:
+    """Nearest straight-line distance from each center to the closest facility.
+
+    Both inputs must already be in the same projected CRS (e.g. EPSG:3857).
+    Returns centers with distance_col and 'codigo_unico' columns added.
+    """
+    result = gpd.sjoin_nearest(
+        centers,
+        facilities[["codigo_unico", "geometry"]],
+        how="left",
+        distance_col=distance_col,
+    ).drop(columns=["index_right"], errors="ignore")
+    return result
+

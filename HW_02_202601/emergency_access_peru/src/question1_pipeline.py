@@ -6,8 +6,14 @@ import pandas as pd
 
 from .cleaning import clean_c1, clean_ipress
 from .data_loader import load_c1_raw, load_ipress_raw
+from .geospatial import load_districts
 from .metrics import build_q1_territorial_availability
-from .visualization import plot_q1_data_quality, plot_q1_scatter, plot_q1_top_bottom
+from .visualization import (
+    plot_choropleth_q1_score,
+    plot_q1_data_quality,
+    plot_q1_scatter,
+    plot_q1_top_bottom,
+)
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -76,12 +82,16 @@ def run_question1_pipeline(omit_missing_only: bool = False) -> None:
     scatter_mode = FIGURES_DIR / f"q1_facilities_vs_activity_scatter_{mode_suffix}.png"
     quality_mode = FIGURES_DIR / f"q1_data_quality_footprint_{mode_suffix}.png"
 
-    plot_q1_top_bottom(q1, top_bottom_main)
+    mode_label = "Missing-only districts omitted" if omit_missing_only else "All districts included (missing activity tracked)"
+    plot_q1_top_bottom(q1, top_bottom_main, subtitle=mode_label)
     plot_q1_scatter(q1, scatter_main)
     plot_q1_data_quality(q1, quality_main)
-    plot_q1_top_bottom(q1, top_bottom_mode)
+    plot_q1_top_bottom(q1, top_bottom_mode, subtitle=mode_label)
     plot_q1_scatter(q1, scatter_mode)
     plot_q1_data_quality(q1, quality_mode)
+
+    districts = load_districts()
+    plot_choropleth_q1_score(districts, q1, FIGURES_DIR / "q1_choropleth_score.png")
 
     summary = [
         "# Question 1 Summary",

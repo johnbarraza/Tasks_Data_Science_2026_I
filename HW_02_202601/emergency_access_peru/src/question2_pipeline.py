@@ -10,6 +10,7 @@ from .data_loader import load_ipress_raw
 from .geospatial import (
     assign_points_to_districts,
     build_ipress_geodataframe,
+    compute_nearest_distances,
     load_districts,
     load_populated_centers,
 )
@@ -54,7 +55,7 @@ def run_question2_pipeline() -> None:
     centers_3857 = centers.to_crs(epsg=3857)
     facilities_3857 = emergency_facilities.to_crs(epsg=3857)
 
-    nearest = gpd.sjoin_nearest(
+    nearest = compute_nearest_distances(
         centers_3857[
             [
                 "center_id",
@@ -67,10 +68,9 @@ def run_question2_pipeline() -> None:
                 "geometry",
             ]
         ],
-        facilities_3857[["codigo_unico", "geometry"]],
-        how="left",
+        facilities_3857,
         distance_col="distance_m",
-    ).drop(columns=["index_right"], errors="ignore")
+    )
 
     nearest["matched_facility"] = nearest["codigo_unico"].notna()
     nearest["distance_km"] = nearest["distance_m"] / 1000

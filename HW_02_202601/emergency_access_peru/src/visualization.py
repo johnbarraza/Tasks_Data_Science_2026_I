@@ -8,6 +8,25 @@ import seaborn as sns
 import pandas as pd
 
 
+def _annotate_horizontal_bars(ax: plt.Axes, fmt: str = "{:.3f}") -> None:
+    """Add readable value labels to horizontal bar charts."""
+    xmin, xmax = ax.get_xlim()
+    span = xmax - xmin if xmax > xmin else 1
+    for patch in ax.patches:
+        width = patch.get_width()
+        y = patch.get_y() + patch.get_height() / 2
+        x = width + span * 0.01
+        ax.text(
+            x,
+            y,
+            fmt.format(width),
+            va="center",
+            ha="left",
+            fontsize=8,
+            color="#333333",
+        )
+
+
 def plot_q1_top_bottom(
     district_df: pd.DataFrame,
     output_path: Path,
@@ -20,32 +39,48 @@ def plot_q1_top_bottom(
     # C1 rows), not genuine low-access districts. Show worst districts that have some data.
     has_data = district_df["q1_territorial_availability_score"].gt(0)
     bottom = district_df[has_data].nsmallest(n, "q1_territorial_availability_score").copy()
+    top["district_label"] = (
+        top["rank_best_to_worst"].astype(int).astype(str)
+        + ". "
+        + top["departamento"]
+        + " / "
+        + top["distrito"]
+    )
+    bottom["district_label"] = (
+        bottom["rank_worst_to_best"].astype(int).astype(str)
+        + ". "
+        + bottom["departamento"]
+        + " / "
+        + bottom["distrito"]
+    )
 
     fig, axes = plt.subplots(1, 2, figsize=(16, 7), constrained_layout=True)
 
     sns.barplot(
-        data=top.sort_values("q1_territorial_availability_score", ascending=True),
+        data=top.sort_values("q1_territorial_availability_score", ascending=False),
         x="q1_territorial_availability_score",
-        y="distrito",
+        y="district_label",
         color="#4c9f70",
         ax=axes[0],
     )
-    axes[0].set_title(f"Top {n} Districts by Territorial Availability")
-    axes[0].set_xlabel("Q1 Territorial Availability Score")
+    axes[0].set_title(f"Top {n} districts (highest Q1 scores)")
+    axes[0].set_xlabel("Q1 score (0-1, higher is better)")
     axes[0].set_ylabel("")
 
     sns.barplot(
         data=bottom.sort_values("q1_territorial_availability_score", ascending=True),
         x="q1_territorial_availability_score",
-        y="distrito",
+        y="district_label",
         color="#c44e52",
         ax=axes[1],
     )
-    axes[1].set_title(f"Bottom {n} Districts by Territorial Availability")
-    axes[1].set_xlabel("Q1 Territorial Availability Score")
+    axes[1].set_title(f"Bottom {n} districts (lowest positive Q1 scores)")
+    axes[1].set_xlabel("Q1 score (0-1, higher is better)")
     axes[1].set_ylabel("")
-    axes[0].set_xlim(0, 1)
-    axes[1].set_xlim(0, 1)
+    axes[0].set_xlim(0, 1.08)
+    axes[1].set_xlim(0, 1.08)
+    _annotate_horizontal_bars(axes[0])
+    _annotate_horizontal_bars(axes[1])
 
     n_districts = len(district_df)
     base_title = "Question 1: Territorial availability of facilities and emergency activity"
@@ -107,7 +142,7 @@ def plot_q1_data_quality(district_df: pd.DataFrame, output_path: Path, n: int = 
     fig, axes = plt.subplots(1, 2, figsize=(16, 8), constrained_layout=True)
 
     sns.barplot(
-        data=top_missing_rows.sort_values("atenciones_missing_rows", ascending=True),
+        data=top_missing_rows.sort_values("atenciones_missing_rows", ascending=False),
         x="atenciones_missing_rows",
         y="district_label",
         color="#d95f02",
@@ -116,6 +151,7 @@ def plot_q1_data_quality(district_df: pd.DataFrame, output_path: Path, n: int = 
     axes[0].set_title(f"Top {n} districts by missing emergency-attention rows")
     axes[0].set_xlabel("Missing rows in emergency attentions")
     axes[0].set_ylabel("")
+    _annotate_horizontal_bars(axes[0], fmt="{:.0f}")
 
     sns.scatterplot(
         data=scatter_df,
@@ -145,32 +181,48 @@ def plot_q2_top_bottom_access(
     strongest = district_df.nlargest(n, "q2_settlement_access_score").copy()
     has_data = district_df["q2_settlement_access_score"].gt(0)
     weakest = district_df[has_data].nsmallest(n, "q2_settlement_access_score").copy()
+    strongest["district_label"] = (
+        strongest["rank_best_to_worst"].astype(int).astype(str)
+        + ". "
+        + strongest["department"]
+        + " / "
+        + strongest["district"]
+    )
+    weakest["district_label"] = (
+        weakest["rank_worst_to_best"].astype(int).astype(str)
+        + ". "
+        + weakest["department"]
+        + " / "
+        + weakest["district"]
+    )
 
     fig, axes = plt.subplots(1, 2, figsize=(16, 7), constrained_layout=True)
 
     sns.barplot(
-        data=strongest.sort_values("q2_settlement_access_score", ascending=True),
+        data=strongest.sort_values("q2_settlement_access_score", ascending=False),
         x="q2_settlement_access_score",
-        y="district",
+        y="district_label",
         color="#4c78a8",
         ax=axes[0],
     )
-    axes[0].set_title(f"Top {n} Districts by Settlement Access")
-    axes[0].set_xlabel("Q2 settlement access score")
+    axes[0].set_title(f"Top {n} districts (highest Q2 access scores)")
+    axes[0].set_xlabel("Q2 score (0-1, higher is better)")
     axes[0].set_ylabel("")
 
     sns.barplot(
         data=weakest.sort_values("q2_settlement_access_score", ascending=True),
         x="q2_settlement_access_score",
-        y="district",
+        y="district_label",
         color="#dd8452",
         ax=axes[1],
     )
-    axes[1].set_title(f"Bottom {n} Districts by Settlement Access")
-    axes[1].set_xlabel("Q2 settlement access score")
+    axes[1].set_title(f"Bottom {n} districts (lowest positive Q2 scores)")
+    axes[1].set_xlabel("Q2 score (0-1, higher is better)")
     axes[1].set_ylabel("")
-    axes[0].set_xlim(0, 1)
-    axes[1].set_xlim(0, 1)
+    axes[0].set_xlim(0, 1.08)
+    axes[1].set_xlim(0, 1.08)
+    _annotate_horizontal_bars(axes[0])
+    _annotate_horizontal_bars(axes[1])
 
     fig.suptitle(
         "Question 2: Populated-center access to emergency-related facilities",
@@ -209,32 +261,48 @@ def plot_q3_top_bottom_combined(
     strongest = district_df.nlargest(n, "q3_baseline_combined_score").copy()
     has_data = district_df["q3_baseline_combined_score"].gt(0)
     weakest = district_df[has_data].nsmallest(n, "q3_baseline_combined_score").copy()
+    strongest["district_label"] = (
+        strongest["baseline_rank_best_to_worst"].astype(int).astype(str)
+        + ". "
+        + strongest["departamento"]
+        + " / "
+        + strongest["distrito"]
+    )
+    weakest["district_label"] = (
+        weakest["baseline_rank_best_to_worst"].astype(int).astype(str)
+        + ". "
+        + weakest["departamento"]
+        + " / "
+        + weakest["distrito"]
+    )
 
     fig, axes = plt.subplots(1, 2, figsize=(16, 7), constrained_layout=True)
 
     sns.barplot(
-        data=strongest.sort_values("q3_baseline_combined_score", ascending=True),
+        data=strongest.sort_values("q3_baseline_combined_score", ascending=False),
         x="q3_baseline_combined_score",
-        y="distrito",
+        y="district_label",
         color="#72b7b2",
         ax=axes[0],
     )
-    axes[0].set_title(f"Top {n} Districts by Baseline Combined Score")
-    axes[0].set_xlabel("Q3 baseline combined score")
+    axes[0].set_title(f"Top {n} districts (highest Q3 scores)")
+    axes[0].set_xlabel("Q3 score (0-1, higher is better)")
     axes[0].set_ylabel("")
 
     sns.barplot(
         data=weakest.sort_values("q3_baseline_combined_score", ascending=True),
         x="q3_baseline_combined_score",
-        y="distrito",
+        y="district_label",
         color="#e07b7b",
         ax=axes[1],
     )
-    axes[1].set_title(f"Bottom {n} Districts by Baseline Combined Score")
-    axes[1].set_xlabel("Q3 baseline combined score")
+    axes[1].set_title(f"Bottom {n} districts (lowest positive Q3 scores)")
+    axes[1].set_xlabel("Q3 score (0-1, higher is better)")
     axes[1].set_ylabel("")
-    axes[0].set_xlim(0, 1)
-    axes[1].set_xlim(0, 1)
+    axes[0].set_xlim(0, 1.08)
+    axes[1].set_xlim(0, 1.08)
+    _annotate_horizontal_bars(axes[0])
+    _annotate_horizontal_bars(axes[1])
 
     fig.suptitle(
         "Question 3: District comparison combining Q1 availability and Q2 access",
@@ -383,10 +451,10 @@ def plot_choropleth_q3_comparison(
     )
 
     pairs = [
-        ("q3_baseline_combined_score", "Q3 Baseline Combined Score\n(50% Q1 + 50% Q2 median-distance)"),
+        ("q3_baseline_combined_score", "Q3 Baseline Combined Score\n(50% Q1 + 50% Q2 structural)"),
         (
             "q4_alternative_combined_score",
-            "Q4 Alternative Combined Score\n(equal thirds: facility / activity / Q2 mean-dist+20km penalty)",
+            "Q4 Alternative Combined Score\n(50% Q1 + 50% Q2 C1-observed)",
         ),
     ]
     fig, axes = plt.subplots(1, 2, figsize=(22, 14), constrained_layout=True)

@@ -108,7 +108,7 @@ def compute_nearest_distances(
 ) -> gpd.GeoDataFrame:
     """Nearest straight-line distance from each center to the closest facility.
 
-    Both inputs must already be in the same projected CRS (e.g. EPSG:3857).
+    Both inputs must already be in the same projected metric CRS (e.g. EPSG:32718).
     Returns centers with distance_col and 'codigo_unico' columns added.
     """
     result = gpd.sjoin_nearest(
@@ -118,4 +118,3 @@ def compute_nearest_distances(
         distance_col=distance_col,
     ).drop(columns=["index_right"], errors="ignore")
     return result
-

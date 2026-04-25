@@ -6,8 +6,14 @@ import pandas as pd
 
 from .cleaning import clean_c1, clean_ipress
 from .data_loader import load_c1_raw, load_ipress_raw
+from .geospatial import load_districts
 from .metrics import build_q1_territorial_availability
-from .visualization import plot_q1_data_quality, plot_q1_scatter, plot_q1_top_bottom
+from .visualization import (
+    plot_choropleth_q1_score,
+    plot_q1_data_quality,
+    plot_q1_scatter,
+    plot_q1_top_bottom,
+)
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -33,6 +39,21 @@ def _q1_missing_only_mask(df: pd.DataFrame) -> pd.Series:
     )
 
 
+def _recompute_q1_ranks(df: pd.DataFrame) -> pd.DataFrame:
+    ranked = df.copy()
+    ranked["rank_best_to_worst"] = (
+        ranked["q1_territorial_availability_score"]
+        .rank(method="dense", ascending=False)
+        .astype(int)
+    )
+    ranked["rank_worst_to_best"] = (
+        ranked["q1_territorial_availability_score"]
+        .rank(method="dense", ascending=True)
+        .astype(int)
+    )
+    return ranked.sort_values("rank_best_to_worst").reset_index(drop=True)
+
+
 def run_question1_pipeline(omit_missing_only: bool = False) -> None:
     PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
     FIGURES_DIR.mkdir(parents=True, exist_ok=True)
@@ -51,8 +72,14 @@ def run_question1_pipeline(omit_missing_only: bool = False) -> None:
     missing_only_mask = _q1_missing_only_mask(q1_full)
     omitted_count = int(missing_only_mask.sum())
     q1 = q1_full[~missing_only_mask].copy() if omit_missing_only else q1_full.copy()
+    q1_omitting_missing = _recompute_q1_ranks(q1_full[~missing_only_mask].copy())
 
     q1.to_csv(TABLES_DIR / "q1_territorial_availability.csv", index=False, encoding="utf-8")
+    q1_omitting_missing.to_csv(
+        TABLES_DIR / "q1_territorial_availability_omitting_missing.csv",
+        index=False,
+        encoding="utf-8",
+    )
     q1.head(20).to_csv(TABLES_DIR / "q1_top20_districts.csv", index=False, encoding="utf-8")
     q1.sort_values("q1_territorial_availability_score", ascending=True).head(20).to_csv(
         TABLES_DIR / "q1_bottom20_districts.csv",
@@ -76,12 +103,33 @@ def run_question1_pipeline(omit_missing_only: bool = False) -> None:
     scatter_mode = FIGURES_DIR / f"q1_facilities_vs_activity_scatter_{mode_suffix}.png"
     quality_mode = FIGURES_DIR / f"q1_data_quality_footprint_{mode_suffix}.png"
 
-    plot_q1_top_bottom(q1, top_bottom_main)
+    mode_label = "Missing-only districts omitted" if omit_missing_only else "All districts included (missing activity tracked)"
+    plot_q1_top_bottom(q1, top_bottom_main, subtitle=mode_label)
     plot_q1_scatter(q1, scatter_main)
     plot_q1_data_quality(q1, quality_main)
-    plot_q1_top_bottom(q1, top_bottom_mode)
+    plot_q1_top_bottom(q1, top_bottom_mode, subtitle=mode_label)
     plot_q1_scatter(q1, scatter_mode)
     plot_q1_data_quality(q1, quality_mode)
+
+    sensitivity_label = (
+        f"Sensitivity: {omitted_count:,} missing-dominant districts omitted"
+    )
+    plot_q1_top_bottom(
+        q1_omitting_missing,
+        FIGURES_DIR / "q1_top_bottom_districts_omitting_missing.png",
+        subtitle=sensitivity_label,
+    )
+    plot_q1_scatter(
+        q1_omitting_missing,
+        FIGURES_DIR / "q1_facilities_vs_activity_scatter_omitting_missing.png",
+    )
+    plot_q1_data_quality(
+        q1_omitting_missing,
+        FIGURES_DIR / "q1_data_quality_footprint_omitting_missing.png",
+    )
+
+    districts = load_districts()
+    plot_choropleth_q1_score(districts, q1, FIGURES_DIR / "q1_choropleth_score.png")
 
     summary = [
         "# Question 1 Summary",
@@ -89,7 +137,9 @@ def run_question1_pipeline(omit_missing_only: bool = False) -> None:
         "This file was generated from the Q1 territorial availability pipeline.",
         f"Omit missing-only districts mode: {omit_missing_only}",
         f"Missing-only districts omitted: {omitted_count if omit_missing_only else 0}",
+        f"Q1 sensitivity table omits missing-dominant districts: {omitted_count}",
         f"Number of districts in table: {len(q1)}",
+        f"Number of districts in Q1 sensitivity table: {len(q1_omitting_missing)}",
         f"Figure suffix generated: {mode_suffix}",
         "",
         "Data quality mapping (kept, not dropped):",

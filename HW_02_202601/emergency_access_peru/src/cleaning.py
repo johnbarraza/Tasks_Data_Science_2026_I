@@ -47,6 +47,7 @@ def clean_ipress(df: pd.DataFrame) -> pd.DataFrame:
         "longitude"
     ].between(-90, -60)
 
+    cleaned = cleaned[cleaned["estado"] == "ACTIVADO"].copy()
     cleaned["emergency_proxy"] = cleaned["categoria"].isin(EMERGENCY_PROXY_CATEGORIES)
     cleaned = cleaned.drop_duplicates(subset=["codigo_unico"], keep="first")
     return cleaned

@@ -1,0 +1,21 @@
+ubigeo,departamento,provincia,distrito,total_facilities,emergency_proxy_facilities,facilities_missing_coords,c1_rows,reporting_ipress_count,total_emergency_attentions,total_emergency_attended,atenciones_missing_rows,atendidos_missing_rows,atenciones_zero_rows,atendidos_zero_rows,atenciones_missing_share,atendidos_missing_share,atenciones_zero_share,atendidos_zero_share,activity_quality_tag,facility_component,activity_component,q1_territorial_availability_score,availability_level,rank_best_to_worst,rank_worst_to_best
+221006,SAN MARTIN,TOCACHE,SANTA LUCIA,0.0,0.0,0.0,4.0,2.0,0.0,0.0,4.0,4.0,0.0,0.0,1.0,1.0,0.0,0.0,Missing activity values present,0.0,0.0,0.0,Very low availability,553,1
+250307,UCAYALI,PADRE ABAD,BOQUERON,0.0,0.0,0.0,10.0,5.0,0.0,0.0,10.0,10.0,0.0,0.0,1.0,1.0,0.0,0.0,Missing activity values present,0.0,0.0,0.0,Very low availability,553,1
+080918,CUSCO,LA CONVENCION,UNION ASHANINKA,0.0,0.0,0.0,2.0,1.0,0.0,0.0,2.0,2.0,0.0,0.0,1.0,1.0,0.0,0.0,Missing activity values present,0.0,0.0,0.0,Very low availability,553,1
+080917,CUSCO,LA CONVENCION,MANITEA,0.0,0.0,0.0,2.0,1.0,0.0,0.0,2.0,2.0,0.0,0.0,1.0,1.0,0.0,0.0,Missing activity values present,0.0,0.0,0.0,Very low availability,553,1
+250306,UCAYALI,PADRE ABAD,HUIPOCA,0.0,0.0,0.0,8.0,4.0,0.0,0.0,8.0,8.0,0.0,0.0,1.0,1.0,0.0,0.0,Missing activity values present,0.0,0.0,0.0,Very low availability,553,1
+120609,JUNIN,SATIPO,VIZCATAN DEL ENE,0.0,0.0,0.0,12.0,6.0,0.0,0.0,12.0,12.0,0.0,0.0,1.0,1.0,0.0,0.0,Missing activity values present,0.0,0.0,0.0,Very low availability,553,1
+090723,HUANCAVELICA,TAYACAJA,SANTIAGO DE TUCUMA,0.0,0.0,0.0,3.0,1.0,0.0,0.0,3.0,3.0,0.0,0.0,1.0,1.0,0.0,0.0,Missing activity values present,0.0,0.0,0.0,Very low availability,553,1
+090724,HUANCAVELICA,TAYACAJA,LAMBRAS,0.0,0.0,0.0,9.0,3.0,0.0,0.0,9.0,9.0,0.0,0.0,1.0,1.0,0.0,0.0,Missing activity values present,0.0,0.0,0.0,Very low availability,553,1
+090725,HUANCAVELICA,TAYACAJA,COCHABAMBA,0.0,0.0,0.0,3.0,1.0,0.0,0.0,3.0,3.0,0.0,0.0,1.0,1.0,0.0,0.0,Missing activity values present,0.0,0.0,0.0,Very low availability,553,1
+080913,CUSCO,LA CONVENCION,VILLA KINTIARINA,0.0,0.0,0.0,2.0,1.0,0.0,0.0,2.0,2.0,0.0,0.0,1.0,1.0,0.0,0.0,Missing activity values present,0.0,0.0,0.0,Very low availability,553,1
+080916,CUSCO,LA CONVENCION,CIELO PUNCO,0.0,0.0,0.0,2.0,1.0,0.0,0.0,2.0,2.0,0.0,0.0,1.0,1.0,0.0,0.0,Missing activity values present,0.0,0.0,0.0,Very low availability,553,1
+151018,LIMA,YAUYOS,LARAOS,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,No missing or zero activity values,0.06391125855047272,0.0,0.03195562927523636,Very low availability,552,2
+151017,LIMA,YAUYOS,HUAÑEC,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,No missing or zero activity values,0.06391125855047272,0.0,0.03195562927523636,Very low availability,552,2
+151016,LIMA,YAUYOS,HUANTAN,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,No missing or zero activity values,0.06391125855047272,0.0,0.03195562927523636,Very low availability,552,2
+151015,LIMA,YAUYOS,HUANGASCAR,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,No missing or zero activity values,0.06391125855047272,0.0,0.03195562927523636,Very low availability,552,2
+151014,LIMA,YAUYOS,HUANCAYA,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,No missing or zero activity values,0.06391125855047272,0.0,0.03195562927523636,Very low availability,552,2
+151013,LIMA,YAUYOS,HUAMPARA,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,No missing or zero activity values,0.06391125855047272,0.0,0.03195562927523636,Very low availability,552,2
+020103,ANCASH,HUARAZ,COLCABAMBA,1.0,0.0,0.0,2.0,1.0,0.0,0.0,2.0,2.0,0.0,0.0,1.0,1.0,0.0,0.0,Missing activity values present,0.06391125855047272,0.0,0.03195562927523636,Very low availability,552,2
+230407,TACNA,TARATA,TARUCACHI,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,No missing or zero activity values,0.06391125855047272,0.0,0.03195562927523636,Very low availability,552,2
+230405,TACNA,TARATA,SITAJARA,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,No missing or zero activity values,0.06391125855047272,0.0,0.03195562927523636,Very low availability,552,2

@@ -11,6 +11,10 @@ def _name_agg(series: pd.Series) -> str:
     return valid.iloc[0] if not valid.empty else ""
 
 
+def _as_ubigeo(series: pd.Series) -> pd.Series:
+    return series.astype(str).str.replace(r"\.0$", "", regex=True).str.zfill(6)
+
+
 def build_q1_territorial_availability(
     ipress: pd.DataFrame, c1: pd.DataFrame
 ) -> pd.DataFrame:
@@ -176,25 +180,31 @@ def build_q2_settlement_access(
             max_distance_km=("distance_km", "max"),
             share_over_10km=("distance_km", lambda x: (x > 10).mean()),
             share_over_20km=("distance_km", lambda x: (x > 20).mean()),
+            share_over_30km=("distance_km", lambda x: (x > 30).mean()),
         )
         .copy()
     )
 
     district_base = districts[["ubigeo", "department", "province", "district"]].drop_duplicates()
-    district_access = district_base.merge(district_access, on="ubigeo", how="left", suffixes=("", "_agg"))
+    district_access = district_base.merge(
+        district_access, on="ubigeo", how="left", suffixes=("", "_agg")
+    )
 
     district_access["department"] = district_access["department_agg"].fillna(
         district_access["department"]
     )
-    district_access["province"] = district_access["province_agg"].fillna(district_access["province"])
-    district_access["district"] = district_access["district_agg"].fillna(district_access["district"])
+    district_access["province"] = district_access["province_agg"].fillna(
+        district_access["province"]
+    )
+    district_access["district"] = district_access["district_agg"].fillna(
+        district_access["district"]
+    )
     district_access = district_access.drop(
         columns=["department_agg", "province_agg", "district_agg"],
         errors="ignore",
     )
 
-    count_cols = ["total_populated_centers", "matched_centers"]
-    for col in count_cols:
+    for col in ["total_populated_centers", "matched_centers"]:
         district_access[col] = district_access[col].fillna(0)
 
     no_match_mask = district_access["matched_centers"].eq(0)
@@ -206,6 +216,7 @@ def build_q2_settlement_access(
         "max_distance_km",
         "share_over_10km",
         "share_over_20km",
+        "share_over_30km",
     ]
     for col in metric_cols:
         district_access[col] = district_access[col].fillna(0)
@@ -220,16 +231,19 @@ def build_q2_settlement_access(
     )
 
     max_distance_proxy = district_access.loc[~no_match_mask, "median_distance_km"].max()
-    if max_distance_proxy <= 0:
+    if pd.isna(max_distance_proxy) or max_distance_proxy <= 0:
         max_distance_proxy = 1.0
     distance_proxy = district_access["median_distance_km"].copy()
     distance_proxy.loc[no_match_mask] = max_distance_proxy * 1.1
 
     district_access["distance_component"] = 1 - minmax_scale(np.log1p(distance_proxy))
+    remote_share = district_access["share_over_30km"].copy()
+    remote_share.loc[no_match_mask] = 1.0
+    district_access["remote_tail_component"] = 1 - remote_share
     district_access["coverage_component"] = district_access["coverage_share"]
     district_access["q2_settlement_access_score"] = (
-        0.65 * district_access["distance_component"]
-        + 0.35 * district_access["coverage_component"]
+        0.70 * district_access["distance_component"]
+        + 0.30 * district_access["remote_tail_component"]
     )
     district_access["q2_access_level"] = availability_bucket(
         district_access["q2_settlement_access_score"]
@@ -260,8 +274,10 @@ def build_q2_settlement_access(
         "max_distance_km",
         "share_over_10km",
         "share_over_20km",
+        "share_over_30km",
         "coverage_component",
         "distance_component",
+        "remote_tail_component",
         "q2_settlement_access_score",
         "q2_access_level",
         "rank_best_to_worst",
@@ -271,7 +287,9 @@ def build_q2_settlement_access(
 
 
 def build_q3_q4_combined_comparison(
-    q1: pd.DataFrame, q2: pd.DataFrame
+    q1: pd.DataFrame,
+    q2_baseline: pd.DataFrame,
+    q2_alternative: pd.DataFrame,
 ) -> pd.DataFrame:
     q1_view = q1[
         [
@@ -289,7 +307,9 @@ def build_q3_q4_combined_comparison(
             "q1_territorial_availability_score",
         ]
     ].copy()
-    q2_view = q2[
+    q1_view["ubigeo"] = _as_ubigeo(q1_view["ubigeo"])
+
+    q2_baseline_view = q2_baseline[
         [
             "ubigeo",
             "department",
@@ -298,19 +318,54 @@ def build_q3_q4_combined_comparison(
             "total_populated_centers",
             "matched_centers",
             "coverage_share",
+            "mean_distance_km",
             "median_distance_km",
+            "share_over_20km",
+            "share_over_30km",
             "coverage_component",
             "distance_component",
+            "remote_tail_component",
             "q2_settlement_access_score",
         ]
     ].copy()
+    q2_baseline_view["ubigeo"] = _as_ubigeo(q2_baseline_view["ubigeo"])
+
+    q2_alternative_view = q2_alternative[
+        [
+            "ubigeo",
+            "matched_centers",
+            "coverage_share",
+            "mean_distance_km",
+            "median_distance_km",
+            "share_over_20km",
+            "share_over_30km",
+            "distance_component",
+            "remote_tail_component",
+            "q2_settlement_access_score",
+        ]
+    ].copy()
+    q2_alternative_view["ubigeo"] = _as_ubigeo(q2_alternative_view["ubigeo"])
+    q2_alternative_view = q2_alternative_view.rename(
+        columns={
+            "matched_centers": "matched_centers_observed",
+            "coverage_share": "coverage_share_observed",
+            "mean_distance_km": "mean_distance_km_observed",
+            "median_distance_km": "median_distance_km_observed",
+            "share_over_20km": "share_over_20km_observed",
+            "share_over_30km": "share_over_30km_observed",
+            "distance_component": "distance_component_observed",
+            "remote_tail_component": "remote_tail_component_observed",
+            "q2_settlement_access_score": "q2_observed_settlement_access_score",
+        }
+    )
 
     merged = q1_view.merge(
-        q2_view,
+        q2_baseline_view,
         on="ubigeo",
         how="outer",
         suffixes=("_q1", "_q2"),
     )
+    merged = merged.merge(q2_alternative_view, on="ubigeo", how="left")
 
     merged["departamento"] = merged["departamento"].fillna(merged["department"])
     merged["provincia"] = merged["provincia"].fillna(merged["province"])
@@ -328,11 +383,24 @@ def build_q3_q4_combined_comparison(
         "total_populated_centers",
         "matched_centers",
         "coverage_share",
+        "mean_distance_km",
         "median_distance_km",
+        "share_over_20km",
+        "share_over_30km",
         "q1_territorial_availability_score",
         "coverage_component",
         "distance_component",
+        "remote_tail_component",
         "q2_settlement_access_score",
+        "matched_centers_observed",
+        "coverage_share_observed",
+        "mean_distance_km_observed",
+        "median_distance_km_observed",
+        "share_over_20km_observed",
+        "share_over_30km_observed",
+        "distance_component_observed",
+        "remote_tail_component_observed",
+        "q2_observed_settlement_access_score",
     ]
     for col in score_cols:
         merged[col] = merged[col].fillna(0.0)
@@ -342,9 +410,8 @@ def build_q3_q4_combined_comparison(
         + 0.50 * merged["q2_settlement_access_score"]
     )
     merged["q4_alternative_combined_score"] = (
-        0.30 * merged["facility_component"]
-        + 0.20 * merged["activity_component"]
-        + 0.50 * merged["q2_settlement_access_score"]
+        0.50 * merged["q1_territorial_availability_score"]
+        + 0.50 * merged["q2_observed_settlement_access_score"]
     )
 
     merged["baseline_rank_best_to_worst"] = (
@@ -364,7 +431,6 @@ def build_q3_q4_combined_comparison(
     merged["q3_baseline_level"] = availability_bucket(merged["q3_baseline_combined_score"])
     merged["q4_alternative_level"] = availability_bucket(merged["q4_alternative_combined_score"])
 
-    # Diagnostic tags to separate "missing-driven" low scores from observed low access.
     merged["q1_missing_dominant"] = (
         merged["atenciones_missing_share"].ge(1.0)
         & merged["atendidos_missing_share"].ge(1.0)
@@ -384,6 +450,10 @@ def build_q3_q4_combined_comparison(
     )
     merged["q2_observed_low_access"] = (
         merged["matched_centers"].gt(0) & merged["q2_settlement_access_score"].lt(0.40)
+    )
+    merged["q4_observed_no_matched_centers"] = (
+        merged["total_populated_centers"].gt(0)
+        & merged["matched_centers_observed"].eq(0)
     )
     merged["q3_low_score_cause"] = np.select(
         [
@@ -416,9 +486,13 @@ def build_q3_q4_combined_comparison(
         "total_populated_centers",
         "matched_centers",
         "coverage_share",
+        "mean_distance_km",
         "median_distance_km",
+        "share_over_20km",
+        "share_over_30km",
         "q1_territorial_availability_score",
         "q2_settlement_access_score",
+        "q2_observed_settlement_access_score",
         "q3_baseline_combined_score",
         "q4_alternative_combined_score",
         "baseline_rank_best_to_worst",
@@ -429,12 +503,22 @@ def build_q3_q4_combined_comparison(
         "q1_reported_zero_activity",
         "q2_no_matched_centers",
         "q2_observed_low_access",
+        "q4_observed_no_matched_centers",
         "q3_low_score_cause",
         "q3_baseline_level",
         "q4_alternative_level",
         "facility_component",
         "activity_component",
         "distance_component",
+        "remote_tail_component",
         "coverage_component",
+        "matched_centers_observed",
+        "coverage_share_observed",
+        "mean_distance_km_observed",
+        "median_distance_km_observed",
+        "share_over_20km_observed",
+        "share_over_30km_observed",
+        "distance_component_observed",
+        "remote_tail_component_observed",
     ]
     return merged[columns].sort_values("baseline_rank_best_to_worst").reset_index(drop=True)

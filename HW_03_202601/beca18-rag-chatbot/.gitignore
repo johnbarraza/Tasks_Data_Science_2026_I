@@ -3,3 +3,6 @@ chroma_db_*/
 .ipynb_checkpoints/
 __pycache__/
 *.pyc
+
+# Keep the normalized source name used by the notebook, ignore local duplicates.
+data/7778068-*.pdf

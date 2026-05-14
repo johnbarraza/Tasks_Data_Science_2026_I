@@ -1,0 +1,9 @@
+# Local input rasters and auxiliary files are required to run the notebook
+# but must not be committed.
+data/*
+!data/.gitkeep
+
+# Notebook and Python caches
+.ipynb_checkpoints/
+__pycache__/
+*.pyc

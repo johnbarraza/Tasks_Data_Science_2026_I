@@ -1,0 +1,10 @@
+pypdf==5.5.0
+tiktoken==0.9.0
+langchain-text-splitters==0.3.8
+google-genai==1.16.1
+chromadb==1.0.9
+ipywidgets==8.1.7
+tqdm==4.67.1
+python-dotenv==1.1.0
+jupyter==1.1.1
+notebook==7.4.2

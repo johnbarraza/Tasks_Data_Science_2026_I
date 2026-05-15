@@ -600,10 +600,11 @@ def rag_notebook():
 
             load_dotenv(PROJECT_ROOT / ".env")
             GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-            if not GEMINI_API_KEY:
-                raise ValueError("GEMINI_API_KEY was not found. Create a local .env file from .env.example.")
-
-            genai_client = genai.Client(api_key=GEMINI_API_KEY)
+            genai_client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
+            if GEMINI_API_KEY:
+                print("GEMINI_API_KEY loaded from .env.")
+            else:
+                print("GEMINI_API_KEY not found. Offline extraction/chunking cells can run, but embeddings and generation will be skipped.")
 
             packages = [
                 "pypdf",
@@ -719,6 +720,8 @@ def rag_notebook():
 
 
             def _embed_with_retry(texts: List[str], task_type: str, batch_size: int = 16, max_retries: int = 6) -> List[List[float]]:
+                if genai_client is None:
+                    raise ValueError("GEMINI_API_KEY is required for embeddings. Create .env from .env.example.")
                 embeddings = []
                 for start in tqdm(range(0, len(texts), batch_size), desc=f"Embedding {task_type}"):
                     batch = texts[start : start + batch_size]
@@ -770,6 +773,8 @@ def rag_notebook():
             existing_count = collection.count()
             if existing_count > 0:
                 print(f"Collection already has {existing_count:,} documents. Skipping embedding.")
+            elif genai_client is None:
+                print("Collection is empty, but GEMINI_API_KEY is missing. Skipping embedding/indexing.")
             else:
                 texts = [chunk["text"] for chunk in chunks]
                 ids = [chunk["id"] for chunk in chunks]
@@ -808,10 +813,13 @@ def rag_notebook():
 
 
             sample_question = "Cuales son los requisitos para postular a Beca 18?"
-            sample_hits = semantic_search(sample_question, k=3)
-            for idx, hit in enumerate(sample_hits, start=1):
-                print(f"\\nResult {idx} | distance={hit['distance']:.4f} | page={hit['metadata'].get('page')}")
-                print(textwrap.shorten(hit["text"].replace("\\n", " "), width=500))
+            if genai_client is None or collection.count() == 0:
+                print("Skipping semantic search test until GEMINI_API_KEY is available and the collection is indexed.")
+            else:
+                sample_hits = semantic_search(sample_question, k=3)
+                for idx, hit in enumerate(sample_hits, start=1):
+                    print(f"\\nResult {idx} | distance={hit['distance']:.4f} | page={hit['metadata'].get('page')}")
+                    print(textwrap.shorten(hit["text"].replace("\\n", " "), width=500))
             '''
         ),
         md(
@@ -844,6 +852,8 @@ def rag_notebook():
 
 
             def answer_with_context(question: str, k: int = 5) -> Dict[str, Any]:
+                if genai_client is None:
+                    raise ValueError("GEMINI_API_KEY is required for grounded generation. Create .env from .env.example.")
                 hits = semantic_search(question, k=k)
                 context = format_context(hits)
                 prompt = f"Question: {question}\\n\\nRetrieved context:\\n{context}\\n\\nAnswer:"
@@ -867,11 +877,14 @@ def rag_notebook():
                 "Cual es la mejor receta para preparar ceviche?",
             ]
 
-            for question in test_questions:
-                result = answer_with_context(question, k=5)
-                print("\\n" + "=" * 100)
-                print("QUESTION:", question)
-                print("ANSWER:", result["answer"])
+            if genai_client is None or collection.count() == 0:
+                print("Skipping grounded generation tests until GEMINI_API_KEY is available and the collection is indexed.")
+            else:
+                for question in test_questions:
+                    result = answer_with_context(question, k=5)
+                    print("\\n" + "=" * 100)
+                    print("QUESTION:", question)
+                    print("ANSWER:", result["answer"])
             '''
         ),
         md(
@@ -933,6 +946,9 @@ def rag_notebook():
 
             ask_button.on_click(on_ask)
             clear_button.on_click(on_clear)
+
+            if genai_client is None or collection.count() == 0:
+                display(Markdown("Create `.env` with `GEMINI_API_KEY`, rerun the notebook, and the chat interface will answer from indexed sources."))
 
             display(widgets.VBox([
                 widgets.HBox([question_box, ask_button, clear_button]),

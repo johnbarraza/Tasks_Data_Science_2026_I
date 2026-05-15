@@ -1,4 +1,5 @@
 from pathlib import Path
+from textwrap import dedent
 
 import nbformat as nbf
 
@@ -7,11 +8,11 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def md(text: str):
-    return nbf.v4.new_markdown_cell(text.strip())
+    return nbf.v4.new_markdown_cell(dedent(text).strip())
 
 
 def code(text: str):
-    return nbf.v4.new_code_cell(text.strip())
+    return nbf.v4.new_code_cell(dedent(text).strip())
 
 
 def write_notebook(path: Path, cells):
@@ -462,18 +463,29 @@ def raster_notebook():
             pearson_r, pearson_p = stats.pearsonr(sample_vnl, sample_conn)
             print(f"Pearson correlation, every {sample_step}th pixel: r={pearson_r:.4f}, p={pearson_p:.4g}")
 
-            kde_sample = flat_df.iloc[::sample_step].copy()
-            kde_long = kde_sample.melt(
-                id_vars=["class_name"],
-                value_vars=["vnl", "connectivity"],
-                var_name="layer",
-                value_name="value",
-            )
             plt.figure(figsize=(10, 6))
-            sns.kdeplot(data=kde_long, x="value", hue="class_name", style="layer", common_norm=False)
+            palette = dict(zip(flat_df["class_name"].dropna().unique(), sns.color_palette("tab10")))
+            for class_name, class_data in flat_df.iloc[::sample_step].groupby("class_name"):
+                if len(class_data) < 5:
+                    continue
+                sns.kdeplot(
+                    class_data["vnl"],
+                    label=f"{class_name} - VNL",
+                    color=palette[class_name],
+                    linestyle="-",
+                    common_norm=False,
+                )
+                sns.kdeplot(
+                    class_data["connectivity"],
+                    label=f"{class_name} - Connectivity",
+                    color=palette[class_name],
+                    linestyle="--",
+                    common_norm=False,
+                )
             plt.title("KDE distributions by class")
             plt.xlabel("Normalized value")
             plt.ylabel("Density")
+            plt.legend(fontsize=8)
             plt.show()
 
             class1_vnl = flat_df.loc[flat_df["class"] == 1, "vnl"].iloc[::sample_step]

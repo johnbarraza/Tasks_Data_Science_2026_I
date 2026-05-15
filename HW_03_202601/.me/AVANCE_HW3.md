@@ -1,5 +1,7 @@
 # Avance HW3
 
+Contexto consolidado: ver `HW_03_202601/.me/CONTEXTO_ACTUAL_HW3.md`.
+
 ## 2026-05-14
 
 - Leidas instrucciones completas de HW3.

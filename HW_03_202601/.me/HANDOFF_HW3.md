@@ -1,5 +1,7 @@
 # HW3 handoff
 
+Para contexto completo de lo actual, decisiones clave y supuestos, ver `HW_03_202601/.me/CONTEXTO_ACTUAL_HW3.md`.
+
 ## Estado actual
 
 Se esta trabajando en la rama `feature/hw3-raster-rag`.

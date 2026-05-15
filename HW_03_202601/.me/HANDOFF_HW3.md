@@ -37,7 +37,9 @@ jupyter nbconvert --to notebook --execute --inplace HW_03_202601\beca18-rag-chat
 Estado de ejecucion:
 
 - Task 1 ya fue ejecutado completo en `ds_2026` y sus outputs fueron generados.
-- Task 2 fue ejecutado sin `.env`; completo en modo offline, pero embeddings y generacion quedaron saltados por falta de `GEMINI_API_KEY`.
+- Task 2 ya fue ejecutado con `.env` local y `GEMINI_API_KEY`.
+- `chroma_db_beca18/` existe localmente con 491 chunks indexados. Esta carpeta esta ignorada por git y debe permanecer local.
+- El notebook RAG quedo con outputs visibles.
 
 5. Grabar video de maximo 5 minutos, subirlo y reemplazar `PENDIENTE` en:
 

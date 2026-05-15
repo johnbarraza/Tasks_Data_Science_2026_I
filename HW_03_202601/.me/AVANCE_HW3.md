@@ -15,12 +15,13 @@
   - `output/ibd_brecha_digital.tif`
   - `output/clasificacion_brecha.tif`
   - `output/dashboard_brecha_digital.png`
-- Verificado Task 2 en modo offline sin `.env`: extraccion PDF, tokenizacion, chunking, ChromaDB vacio y UI placeholder ejecutan sin error.
+- Verificado Task 2 primero en modo offline sin `.env`: extraccion PDF, tokenizacion, chunking, ChromaDB vacio y UI placeholder ejecutaron sin error.
 - Confirmado que los requirements de RAG estan instalados en `ds_2026`.
+- Ejecutado Task 2 con `.env` local y `GEMINI_API_KEY`.
+- Indexada coleccion ChromaDB local `chroma_db_beca18` con 491 chunks.
+- Notebook RAG reejecutado con outputs visibles.
 
 ## Pendiente
 
-- Crear `.env` local en `beca18-rag-chatbot/` con `GEMINI_API_KEY`.
-- Reejecutar `notebooks/beca18_rag_chatbot.ipynb` con API key para poblar `chroma_db_beca18/` y producir respuestas de prueba.
 - Grabar video y reemplazar `PENDIENTE` en ambos `video/link.txt`.
 - Crear PR desde `feature/hw3-raster-rag` hacia `main`.
